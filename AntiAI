@@ -1,0 +1,105 @@
+using GridWorld;
+using System;
+using System.Collections.Generic;
+
+namespace NewPlayer
+{
+    public class AntiAI : BasePlayer
+    {
+        // An enum for the content of bugs gridsquares
+        public enum BugContentEnum
+        {
+            Empty, Rock, Apple, Bread, Chocolate, Ant, Anthill
+        }
+
+        private PlayerWorldState CurrentState; //Stores current game state
+        private List<Ant> MyAnts = new List<Ant>(); //Ants Position
+        private AStar aStar;
+
+        //Initialise data structures and setting AI name.
+        public AntiAI() : base()
+        {
+            aStar = new AStar();
+            this.Name = "Jake"; // the name that will appear on the client and server.
+        }
+
+        public override ICommand GetTurnCommands(IPlayerWorldState igrid)
+        {
+            //Save our current game board
+            CurrentState = (PlayerWorldState)igrid;
+
+            //Get the location of our Ants (There can only be one! #ItsBetterToBurnOutThanToFadeAway)
+            MyAnts = CurrentState.GetAntsList(CurrentState.ID);
+
+            AStarHillList(CurrentState.GetAntHillsList(CurrentState.ID));
+            if (!aStar.CarriedFood)
+            {
+                AStarFoodList(CurrentState.GetFoodSquaresList());
+                Point current_dest_position = aStar.getNearFood(MyAnts[0].X, MyAnts[0].Y);
+                aStar.fillDestPos(current_dest_position.PointX, current_dest_position.PointY);
+            }
+            else AStarFillDestPos_InGoBackTime(aStar.HillList[0].PointX, aStar.HillList[0].PointY);
+            Point CurrentPosition;
+            CurrentPosition.PointX = MyAnts[0].X;
+            CurrentPosition.PointY = MyAnts[0].Y;
+
+            Point optimal_position = AStarSelectOptimation(MyAnts[0]);
+            if (aStar.isDest(optimal_position))
+            {
+                //aStar.fillDestPos(aStar.mHillList[0].mPointX,aStar.mHillList[0].mPointY);
+                //cur_carried = MyAnts[0].FoodCarried;
+                return null;
+            }
+
+            //Initialise a new Command
+            Command newComm = new Command();
+
+            //Move Ant 1 up 1 square
+            newComm.AddAntMove(MyAnts[0].X, MyAnts[0].Y + 1, MyAnts[0].AntID);
+
+            //Return the command to the game
+            return newComm;
+        }
+
+        public void AStarFoodList(List<GridSquare> list)
+        {
+            for (int i = 0; i < list.Capacity; i++)
+            {
+                Point CurrentPosition;
+                CurrentPosition.PointX = list[i].X;
+                CurrentPosition.PointY = list[i].Y;
+                aStar.FoodList.Add(CurrentPosition);
+            }
+
+        }
+        public void AStarFillDestPos_InGoBackTime(int x, int y)
+        {
+            aStar.fillDestPos(x, y);
+        }
+
+        public void AStarHillList(List<AntHill> list)
+        {
+            for (int i = 0; i < list.Capacity; i++)
+            {
+                Point CurrentPosition;
+                CurrentPosition.PointX = list[i].X;
+                CurrentPosition.PointY = list[i].Y;
+                aStar.HillList.Add(CurrentPosition);
+            }
+        }
+
+        public Point AStarSelectOptimation(Ant ant)
+        {
+            aStar.initiateOpen();
+            Node CurrentNode = new Node();
+            CurrentNode.Parent = null;
+            CurrentNode.Predict_value = 0;
+            CurrentNode.Position.PointX = ant.X;
+            CurrentNode.Position.PointY = ant.Y;
+            CurrentNode.CurrentValue = 0;
+            aStar.onDeploy(CurrentNode);
+            return aStar.fetchOpen().Position;
+
+        }
+    }
+}
