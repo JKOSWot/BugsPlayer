@@ -20,7 +20,7 @@ namespace NewPlayer
         public AntiAI() : base()
         {
             aStar = new AStar();
-            this.Name = "Jake"; // the name that will appear on the client and server.
+            this.Name = "null"; // the name that will appear on the client and server.
         }
 
         public override ICommand GetTurnCommands(IPlayerWorldState igrid)
@@ -35,16 +35,16 @@ namespace NewPlayer
             if (!aStar.CarriedFood)
             {
                 AStarFoodList(CurrentState.GetFoodSquaresList());
-                Point current_dest_position = aStar.getNearFood(MyAnts[0].X, MyAnts[0].Y);
-                aStar.fillDestPos(current_dest_position.PointX, current_dest_position.PointY);
+                Point CurrentDestPosition = aStar.getNearFood(MyAnts[0].X, MyAnts[0].Y);
+                aStar.fillDestPos(CurrentDestPosition.PointX, CurrentDestPosition.PointY);
             }
             else AStarFillDestPos_InGoBackTime(aStar.HillList[0].PointX, aStar.HillList[0].PointY);
             Point CurrentPosition;
             CurrentPosition.PointX = MyAnts[0].X;
             CurrentPosition.PointY = MyAnts[0].Y;
 
-            Point optimal_position = AStarSelectOptimation(MyAnts[0]);
-            if (aStar.isDest(optimal_position))
+            Point OptimalPosition = AStarSelectOptimation(MyAnts[0]);
+            if (aStar.isDest(OptimalPosition))
             {
                 //aStar.fillDestPos(aStar.mHillList[0].mPointX,aStar.mHillList[0].mPointY);
                 //cur_carried = MyAnts[0].FoodCarried;
