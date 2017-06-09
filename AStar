@@ -1,0 +1,203 @@
+using System;
+using System.Collections.Generic;
+namespace NewPlayer
+{
+    public struct Point
+    {
+        public int PointX; //x axis position  
+        public int PointY; //y axis position
+    }
+
+    class AStar
+    {
+        public List<Node> OpenList;
+        public List<Node> ClosedList;
+        public int MinX, MaxX, MinY, MaxY;
+        public bool CarriedFood;
+        public bool isSuccess;
+        Point DestPoint = new Point(); //destination position
+        public List<Point> HillList;
+        public List<Point> FoodList;
+
+        public AStar()
+        {
+            OpenList = new List<Node>();
+            ClosedList = new List<Node>();
+            HillList = new List<Point>();
+            FoodList = new List<Point>();
+            MinX = 0;
+            MinY = 0;
+            MaxX = 11;
+            MaxY = 11;
+            CarriedFood = false;
+            isSuccess = false;
+        }
+
+        public bool isDest(Point position)
+        {
+            if (position.PointX == DestPoint.PointX && position.PointY == DestPoint.PointY)
+            {
+                if (CarriedFood == true)
+                {
+                    isSuccess = true;
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        public Point getNearFood(int x, int y)
+        {
+
+            double CurrentValue = 0;
+            int current_min_index = 0;
+            double current_min_value = Math.Sqrt(Math.Pow(FoodList[0].PointX - x, 2) + Math.Pow(FoodList[0].PointY - y, 2));
+            for (int i = 0; i < FoodList.Count; i++)
+            {
+                CurrentValue = Math.Sqrt(Math.Pow(FoodList[i].PointX - x, 2) + Math.Pow(FoodList[i].PointY - y, 2));
+                if (current_min_value > CurrentValue)
+                {
+                    current_min_value = CurrentValue;
+                    current_min_index = i;
+                }
+            }
+            Point return_position;
+            return_position.PointX = FoodList[current_min_index].PointX;
+            return_position.PointY = FoodList[current_min_index].PointY;
+            return return_position;
+        }
+
+        public void fillDestPos(int x, int y)
+        {
+            DestPoint.PointX = x;
+            DestPoint.PointY = y;
+        }
+
+        public double onPredict(Point pos)
+        {
+            //now predict heuristic value 
+            double h = Math.Sqrt(Math.Pow(DestPoint.PointX - pos.PointX, 2) + Math.Pow(DestPoint.PointY - pos.PointY, 2));
+            return h;
+        }
+
+        public void addToOpen(Node node)
+        {
+            OpenList.Add(node);
+        }
+
+        public void addToClose(Node node)
+        {
+            ClosedList.Add(node);
+        }
+
+        public Node fetchOpen()
+        {
+            /* fetch the min value in the open list*/
+            double cur_evual_value = 0;
+            int cur_min_index = 0;
+            double cur_minValue = onPredict(OpenList[0].Position);
+            for (int i = 0; i < OpenList.Count; i++)
+            {
+                cur_evual_value = onPredict(OpenList[i].Position);
+                if (cur_evual_value < cur_minValue)
+                {
+                    cur_minValue = cur_evual_value;
+                    cur_min_index = i;
+                }
+
+            }
+            Node return_node = OpenList[cur_min_index];
+            OpenList.RemoveAt(cur_min_index);
+            if (cur_minValue == 0)
+            {
+                CarriedFood = true;
+            }
+            return return_node;
+        }
+
+        /*deploy one node form the openlist*/
+        public void onDeploy(Node node)
+        {
+            Point cur_leftPos;
+            //node.mCurrent_evalue = node.mCurrent_evalue;
+            cur_leftPos.PointX = node.Position.PointX - 1;
+            cur_leftPos.PointY = node.Position.PointY;
+            if (node.Position.PointX > MinX)
+            {
+                Node cur_leftNode = new Node();
+                cur_leftNode.CurrentValue = node.CurrentValue + 1;
+                cur_leftNode.Position = cur_leftPos;
+                cur_leftNode.Parent = node;
+                cur_leftNode.Predict_value = onPredict(cur_leftNode.Position);
+                OpenList.Add(cur_leftNode);
+
+            }
+            Point cur_rightPos;
+            cur_rightPos.PointX = node.Position.PointX + 1;
+            cur_rightPos.PointY = node.Position.PointY;
+            if (node.Position.PointX < MaxX)
+            {
+                Node cur_rightNode = new Node();
+                cur_rightNode.CurrentValue = node.CurrentValue + 1;
+                cur_rightNode.Position = cur_rightPos;
+                cur_rightNode.Parent = node;
+                cur_rightNode.Predict_value = onPredict(cur_rightNode.Position);
+                OpenList.Add(cur_rightNode);
+
+            }
+            Point cur_topPos;
+            cur_topPos.PointY = node.Position.PointY + 1;
+            cur_topPos.PointX = node.Position.PointX;
+            if (node.Position.PointY < MaxY)
+            {
+                Node cur_topNode = new Node();
+                cur_topNode.CurrentValue = node.CurrentValue + 1;
+                cur_topNode.Position = cur_topPos;
+                cur_topNode.Parent = node.Parent;
+                cur_topNode.Predict_value = onPredict(cur_topNode.Position);
+                OpenList.Add(cur_topNode);
+            }
+            Point cur_bottomPos;
+            cur_bottomPos.PointX = node.Position.PointX;
+            cur_bottomPos.PointY = node.Position.PointY - 1;
+            if (node.Position.PointY > MinY)
+            {
+                Node cur_bottomNode = new Node();
+                cur_bottomNode.CurrentValue = node.CurrentValue + 1;
+                cur_bottomNode.Position = cur_bottomPos;
+                cur_bottomNode.Parent = node.Parent;
+                cur_bottomNode.Predict_value = onPredict(cur_bottomNode.Position);
+                OpenList.Add(cur_bottomNode);
+            }
+
+        }
+
+        public void onStep()
+        {
+            Node cur_MinNode = fetchOpen();
+            if (onEvalute(cur_MinNode)) return;
+            onDeploy(cur_MinNode);
+        }
+
+        public bool onEvalute(Node node)
+        {
+            if (onPredict(node.Position) == 0) return true;
+            return false;
+        }
+
+        public void initiateOpen()
+        {
+            OpenList.Clear();
+        }
+
+        public bool isNoHill(Point pos)
+        {
+            for (int i = 0; i < HillList.Count; i++)
+            {
+                if (pos.Equals(HillList[i])) return false;
+            }
+            return true;
+        }
+    }
+}
