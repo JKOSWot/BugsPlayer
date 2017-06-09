@@ -2,10 +2,10 @@
 {
     class Node
     {
-        public Point Position;//current position
-        public int Current_value;//compute value of current state
-        public double Predict_value;//predict value of current state
-        public Node Parent;//the pointer to the parent
-        public int State;//in open list or closed list
+        public Point Position; //current position
+        public int CurrentValue; //compute value of current state
+        public double PredictValue; //predict value of current state
+        public Node Parent; //the pointer to the parent
+        public int State; //in open list or closed list
     }
 }
